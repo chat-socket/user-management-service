@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.0.0'
 	id 'io.spring.dependency-management' version '1.1.0'
+	id 'application'
 }
 
 group = 'com.mtvu'
@@ -32,4 +33,13 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+startScripts {
+	//  Ensure that the starting up script of different projects will have the same name
+	applicationName = 'application'
+}
+
+application {
+	mainClass = 'com.mtvu.usermanagementservice.UserManagementServiceApplication'
 }
