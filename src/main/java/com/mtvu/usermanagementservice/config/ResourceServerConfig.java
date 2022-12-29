@@ -19,6 +19,8 @@ public class ResourceServerConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests()
+                    .requestMatchers("/actuator/**")
+                        .permitAll()
                     .anyRequest().authenticated()
                 .and()
                 .sessionManagement()
