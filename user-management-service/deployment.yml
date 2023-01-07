@@ -34,7 +34,7 @@ spec:
             - name: POSTGRES_PASSWORD
               value: "should_be_from_secret"
             - name: OAUTH2_ISSUER_URI
-              value: "http://identity-authorization-server"
+              value: "http://accounts.chat-socket.io"
             - name: JAVA_OPTS
               value: "-Xmx256m -Xms128m -Xss256k -XX:CompressedClassSpaceSize=32m -XX:-TieredCompilation"
           lifecycle:
