@@ -24,9 +24,6 @@ public class ChatUser {
     @Column(name = "user_id", length = 127)
     private String userId;
 
-    @Column(name = "full_name")
-    private String fullName;
-
     @Column(name = "user_login_type", nullable = false, updatable = false, length = 50)
     @Enumerated(EnumType.STRING)
     private UserLoginType userLoginType;
@@ -52,4 +49,9 @@ public class ChatUser {
     @CreationTimestamp
     private OffsetDateTime createdAt;
 
+    @Column(name = "first_name", length = 127)
+    private String firstName;
+
+    @Column(name = "last_name", length = 127)
+    private String lastName;
 }

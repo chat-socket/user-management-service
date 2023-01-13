@@ -40,7 +40,8 @@ public class ChatUserService {
                                UserLoginType userLoginType, boolean isActivated) {
         var chatUser = ChatUser.builder()
             .userId(newUser.userId())
-            .fullName(newUser.fullName())
+            .firstName(newUser.firstName())
+            .lastName(newUser.lastName())
             .userLoginType(userLoginType)
             .password(passwordEncoder.encode(newUser.password()))
             .chatJoinRecords(new HashSet<>())
