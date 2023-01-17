@@ -41,6 +41,13 @@ public class UserManagementController {
         return ResponseEntity.ok(ChatUserDTO.Response.Public.create(user));
     }
 
+    @GetMapping("/get/{userId}")
+    @PreAuthorize("hasAuthority('SCOPE_user:find')")
+    public ResponseEntity<ChatUserDTO.Response.Public> getUser(@PathVariable String userId) {
+        var user = chatUserService.getUser(userId);
+        return ResponseEntity.ok(ChatUserDTO.Response.Public.create(user));
+    }
+
     @GetMapping("/current")
     @PreAuthorize("hasAuthority('SCOPE_profile:read')")
     public ResponseEntity<ChatUserDTO.Response.Public> findUser(Principal principal) {
