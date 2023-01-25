@@ -1,11 +1,18 @@
-FROM openjdk:18-slim AS deps-build
+FROM eclipse-temurin:17-jdk-jammy AS deps-build
 WORKDIR /app
 
-# copy the dependencies into the docker image
-COPY gradle gradle
-COPY gradlew .
-COPY build.gradle .
-COPY settings.gradle .
+# 2. Download the gradle distribution
+COPY gradlew ./
+COPY gradle/ gradle/
+RUN ./gradlew --version
+
+WORKDIR /app
+
+# 3. Resolve dependencies for the util and api projects
+COPY settings.gradle ./
+COPY build.gradle ./
+RUN ./gradlew dependencies
+
 COPY src src
 
 RUN sh gradlew clean installDist
@@ -13,7 +20,6 @@ RUN sh gradlew clean installDist
 # copy the executable jar into the docker image
 RUN mv build/install/* build/dist
 RUN mv build/libs/*-plain.jar build/libs/app.jar
-
 
 # find JDK dependencies dynamically from jar
 RUN jdeps \
@@ -29,11 +35,6 @@ RUN jdeps \
 # pipe the result of running jdeps on the app jar to file
 build/libs/app.jar > jre-deps.info
 
-FROM openjdk:17-alpine AS jre-build
-WORKDIR /app
-
-COPY --from=deps-build /app/jre-deps.info jre-deps.info
-
 RUN jlink --verbose \
 --compress 2 \
 --strip-java-debug-attributes \
@@ -44,11 +45,11 @@ RUN jlink --verbose \
 
 
 # take a smaller runtime image for the final output
-FROM alpine:3.16.2
+FROM alpine:3.17.1
 WORKDIR /deployment
 
 # copy the custom JRE produced from jlink
-COPY --from=jre-build /app/jre jre
+COPY --from=deps-build /app/jre jre
 
 # copy the app dependencies
 COPY --from=deps-build /app/build/dist dist
@@ -58,4 +59,4 @@ ENV JAVA_HOME=/deployment/jre
 EXPOSE 8080
 
 # run the app on startup
-ENTRYPOINT /bin/sh dist/bin/application
+ENTRYPOINT ["/bin/sh", "/deployment/dist/bin/application"]
