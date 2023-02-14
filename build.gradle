@@ -1,45 +1,49 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.0.0'
-	id 'io.spring.dependency-management' version '1.1.0'
-	id 'application'
+    id 'java'
+    id 'io.quarkus'
 }
 
-group = 'com.mtvu'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
-
 repositories {
-	mavenCentral()
+    mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation "org.springframework.boot:spring-boot-starter-web"
-	implementation "org.springframework.boot:spring-boot-starter-validation"
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    compileOnly "org.projectlombok:lombok:1.18.20"
+    annotationProcessor "org.projectlombok:lombok:1.18.20"
+    annotationProcessor "io.quarkus:quarkus-panache-common"
 
-	implementation "org.springframework.boot:spring-boot-starter-security"
-	implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
-	implementation 'org.flywaydb:flyway-core'
-	runtimeOnly 'org.postgresql:postgresql'
-	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly "com.h2database:h2"
-	annotationProcessor 'org.projectlombok:lombok'
+    implementation "io.quarkus:quarkus-security-jpa"
+    implementation "io.quarkus:quarkus-oidc"
+    implementation 'io.quarkus:quarkus-smallrye-health'
+    implementation 'io.quarkus:quarkus-hibernate-orm-panache'
+    implementation 'io.quarkus:quarkus-jdbc-postgresql'
+    implementation 'io.quarkus:quarkus-resteasy-reactive'
+    implementation 'io.quarkus:quarkus-arc'
 
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.quarkus:quarkus-test-h2'
+    testImplementation "io.rest-assured:rest-assured"
+    testImplementation "io.quarkus:quarkus-test-oidc-server"
+    testImplementation 'io.quarkus:quarkus-junit5'
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
+group 'org.acme'
+version '1.0.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
-startScripts {
-	//  Ensure that the starting up script of different projects will have the same name
-	applicationName = 'application'
+test {
+    systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
+}
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
 }
 
-application {
-	mainClass = 'com.mtvu.usermanagementservice.UserManagementServiceApplication'
+compileTestJava {
+    options.encoding = 'UTF-8'
 }

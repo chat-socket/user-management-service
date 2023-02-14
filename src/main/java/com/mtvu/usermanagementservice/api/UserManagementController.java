@@ -2,13 +2,13 @@ package com.mtvu.usermanagementservice.api;
 
 import com.mtvu.usermanagementservice.model.UserLoginType;
 import com.mtvu.usermanagementservice.record.ChatUserDTO;
+import com.mtvu.usermanagementservice.security.PermissionsAllowed;
 import com.mtvu.usermanagementservice.service.ChatUserService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.jboss.resteasy.reactive.RestResponse;
 
+import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
 import java.security.Principal;
 
 /**
@@ -16,51 +16,56 @@ import java.security.Principal;
  * @project chat-socket
  **/
 @AllArgsConstructor
-@RestController
-@RequestMapping("/api/user")
+@Path("/api/user")
 public class UserManagementController {
     private ChatUserService chatUserService;
 
-    @PostMapping("/create/{user_type}")
-    @PreAuthorize("hasAuthority('SCOPE_user:create')")
-    public ResponseEntity<ChatUserDTO.Response.Public> register(@RequestBody ChatUserDTO.Request.Create userData,
-                                                                @PathVariable("user_type") UserLoginType userType) {
+    private Principal principal;
+
+    @POST
+    @Path("/create/{user_type}")
+    @PermissionsAllowed("user:create")
+    public RestResponse<ChatUserDTO.Response.Public> register(ChatUserDTO.Request.Create userData,
+                                                              @PathParam("user_type") UserLoginType userType) {
         if (chatUserService.exists(userData.userId())) {
-            return ResponseEntity.status(HttpStatusCode.valueOf(409)).build();
+            return RestResponse.status(Response.Status.CONFLICT);
         }
         var isActivated = true;    // Todo: Need to verify email
         var user = chatUserService.createUser(userData, userType, isActivated);
-        return ResponseEntity.ok(ChatUserDTO.Response.Public.create(user));
+        return RestResponse.ok(ChatUserDTO.Response.Public.create(user));
     }
 
-    @GetMapping("/find")
-    @PreAuthorize("hasAuthority('SCOPE_user:find')")
-    public ResponseEntity<ChatUserDTO.Response.Public> findUser(@RequestHeader("FindUser") String username,
-                                                                @RequestHeader("FindPwd")String password) {
+    @GET
+    @Path("/find")
+    @PermissionsAllowed("user:find")
+    public RestResponse<ChatUserDTO.Response.Public> findUser(@HeaderParam("FindUser") String username,
+                                                                @HeaderParam("FindPwd") String password) {
         var user = chatUserService.findUser(username, password);
-        return ResponseEntity.ok(ChatUserDTO.Response.Public.create(user));
+        return RestResponse.ok(ChatUserDTO.Response.Public.create(user));
     }
 
-    @GetMapping("/get/{userId}")
-    @PreAuthorize("hasAuthority('SCOPE_user:find')")
-    public ResponseEntity<ChatUserDTO.Response.Public> getUser(@PathVariable String userId) {
+    @GET
+    @Path("/get/{userId}")
+    @PermissionsAllowed("user:find")
+    public RestResponse<ChatUserDTO.Response.Public> getUser(@PathParam("userId") String userId) {
         var user = chatUserService.getUser(userId);
-        return ResponseEntity.ok(ChatUserDTO.Response.Public.create(user));
+        return RestResponse.ok(ChatUserDTO.Response.Public.create(user));
     }
 
-    @GetMapping("/current")
-    @PreAuthorize("hasAuthority('SCOPE_profile:read')")
-    public ResponseEntity<ChatUserDTO.Response.Public> findUser(Principal principal) {
+    @GET
+    @Path("/current")
+    @PermissionsAllowed("profile:read")
+    public RestResponse<ChatUserDTO.Response.Public> findUser() {
         var user = chatUserService.getUser(principal.getName());
-        return ResponseEntity.ok(ChatUserDTO.Response.Public.create(user));
+        return RestResponse.ok(ChatUserDTO.Response.Public.create(user));
     }
 
-    @PutMapping("/password")
-    @PreAuthorize("hasAuthority('SCOPE_profile:write')")
-    public ResponseEntity<ChatUserDTO.Response.Public> changeUserPassword(Principal principal,
-                                                                          ChatUserDTO.Request.Password password) {
+    @PUT
+    @Path("/password")
+    @PermissionsAllowed("profile:write")
+    public RestResponse<ChatUserDTO.Response.Public> changeUserPassword(ChatUserDTO.Request.Password password) {
         var user = chatUserService.getUser(principal.getName());
         user = chatUserService.updatePassword(user, password.newPassword());
-        return ResponseEntity.ok(ChatUserDTO.Response.Public.create(user));
+        return RestResponse.ok(ChatUserDTO.Response.Public.create(user));
     }
 }

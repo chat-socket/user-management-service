@@ -4,49 +4,53 @@ import com.mtvu.usermanagementservice.model.ChatJoinRecord;
 import com.mtvu.usermanagementservice.model.ChatUserGroupKey;
 import com.mtvu.usermanagementservice.model.GroupRole;
 import com.mtvu.usermanagementservice.record.ChatGroupDTO;
+import com.mtvu.usermanagementservice.security.PermissionsAllowed;
 import com.mtvu.usermanagementservice.service.ChatGroupService;
 import com.mtvu.usermanagementservice.service.ChatUserService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.jboss.resteasy.reactive.RestResponse;
 
+import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
 import java.security.Principal;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.springframework.http.ResponseEntity.notFound;
 
 /**
  * @author mvu
  * @project chat-socket
  **/
 @AllArgsConstructor
-@RestController("/api/group")
+@Path("/api/group")
 public class GroupManagementController {
 
     private final ChatGroupService chatGroupService;
 
     private final ChatUserService chatUserService;
 
-    @GetMapping("/{groupId}")
-    @PreAuthorize("hasAuthority('SCOPE_groups:read')")
-    public ResponseEntity<ChatGroupDTO.Response.Public> getGroup(@PathVariable("groupId") String groupId) {
+    private Principal principal;
+
+    @GET
+    @Path("/{groupId}")
+    @PermissionsAllowed("groups:read")
+    public RestResponse<ChatGroupDTO.Response.Public> getGroup(@PathParam("groupId") String groupId) {
         var group = chatGroupService.getChatGroup(groupId);
         return group
-            .map((x) -> ResponseEntity.ok(ChatGroupDTO.Response.Public.create(x)))
-            .orElseGet(() -> notFound().build());
+            .map((x) -> RestResponse.ok(ChatGroupDTO.Response.Public.create(x)))
+            .orElseGet(RestResponse::notFound);
     }
 
-    @PostMapping("/create")
-    @PreAuthorize("hasAuthority('SCOPE_groups:write')")
-    public ResponseEntity<ChatGroupDTO.Response.Public> createGroup(
-            @RequestBody ChatGroupDTO.Request.Create data, Principal principal) {
+    @POST
+    @Path("/create")
+    @PermissionsAllowed("groups:write")
+    public RestResponse<ChatGroupDTO.Response.Public> createGroup(
+            ChatGroupDTO.Request.Create data) {
         var chatGroup = chatGroupService.createChatGroup(data);
         Set<ChatJoinRecord> chatJoinRecords = new HashSet<>();
         if (!data.participants().contains(principal.getName())) {
             // The current user is supposed to be inside the list of participants
-            return ResponseEntity.badRequest().build();
+            return RestResponse.status(Response.Status.BAD_REQUEST);
         }
         for (String participant : data.participants()) {
             var role = participant.equals(principal.getName()) ? GroupRole.ADMIN : GroupRole.MEMBER;
@@ -60,6 +64,6 @@ public class GroupManagementController {
             );
         }
         chatGroupService.addChatMembers(chatGroup, chatJoinRecords);
-        return ResponseEntity.ok(ChatGroupDTO.Response.Public.create(chatGroup));
+        return RestResponse.ok(ChatGroupDTO.Response.Public.create(chatGroup));
     }
 }

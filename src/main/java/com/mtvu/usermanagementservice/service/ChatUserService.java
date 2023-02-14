@@ -4,25 +4,20 @@ import com.mtvu.usermanagementservice.model.ChatUser;
 import com.mtvu.usermanagementservice.model.UserLoginType;
 import com.mtvu.usermanagementservice.record.ChatUserDTO;
 import com.mtvu.usermanagementservice.repository.ChatUserRepository;
+import com.mtvu.usermanagementservice.security.PasswordEncoder;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+import javax.enterprise.context.ApplicationScoped;
+import javax.ws.rs.NotFoundException;
 import java.util.HashSet;
-import java.util.List;
 
 /**
  * @author mvu
  * @project chat-socket
  **/
-@Service
+@ApplicationScoped
 @AllArgsConstructor
 public class ChatUserService {
 
@@ -33,7 +28,7 @@ public class ChatUserService {
     private PasswordEncoder passwordEncoder;
 
     public boolean exists(String userId) {
-        return chatUserRepository.existsById(userId);
+        return chatUserRepository.count("userId", userId) > 0;
     }
 
     public ChatUser createUser(ChatUserDTO.Request.Create newUser,
@@ -48,17 +43,15 @@ public class ChatUserService {
             .isActivated(isActivated)
             .avatar(newUser.avatar())
             .build();
-        return chatUserRepository.save(chatUser);
+        chatUserRepository.persist(chatUser);
+        return chatUser;
     }
 
     public ChatUser findUser(String userId, String password) {
         var user = getUser(userId);
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.verify(password, user.getPassword())) {
             logger.debug("Failed to authenticate since password does not match stored value");
-            throw new UsernameNotFoundException(userId);
-        }
-        if (passwordEncoder.upgradeEncoding(user.getPassword())) {
-            updatePassword(user, password);
+            throw new NotFoundException(userId);
         }
 
         return user;
@@ -66,14 +59,15 @@ public class ChatUserService {
 
     public ChatUser getUser(String userId) {
         var chatUser = chatUserRepository.findById(userId);
-        if (chatUser.isEmpty()) {
-            throw new UsernameNotFoundException(userId);
+        if (chatUser == null) {
+            throw new NotFoundException(userId);
         }
-        return chatUser.get();
+        return chatUser;
     }
 
     public ChatUser updatePassword(ChatUser user, String newPassword) {
         user.setPassword(passwordEncoder.encode(newPassword));
-        return chatUserRepository.save(user);
+        chatUserRepository.persist(user);
+        return user;
     }
 }

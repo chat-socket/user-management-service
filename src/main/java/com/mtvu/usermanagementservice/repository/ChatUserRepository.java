@@ -1,11 +1,14 @@
 package com.mtvu.usermanagementservice.repository;
 
 import com.mtvu.usermanagementservice.model.ChatUser;
-import org.springframework.data.repository.CrudRepository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import javax.enterprise.context.ApplicationScoped;
 
 /**
  * @author mvu
  * @project chat-socket
  **/
-public interface ChatUserRepository extends CrudRepository<ChatUser, String> {
+@ApplicationScoped
+public class ChatUserRepository implements PanacheRepositoryBase<ChatUser, String> {
 }
