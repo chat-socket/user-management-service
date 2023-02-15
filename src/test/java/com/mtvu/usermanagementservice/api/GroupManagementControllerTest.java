@@ -1,32 +1,45 @@
 package com.mtvu.usermanagementservice.api;
 
+import com.mtvu.usermanagementservice.config.OidcWiremockTestResourceConfig;
 import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.h2.H2DatabaseTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.oidc.server.OidcWiremockTestResource;
 import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 import java.util.Set;
 
 import static io.restassured.RestAssured.given;
 
 @QuarkusTest
-@QuarkusTestResource(H2DatabaseTestResource.class)
-@QuarkusTestResource(OidcWiremockTestResource.class)
+@QuarkusTestResource(OidcWiremockTestResourceConfig.class)
 class GroupManagementControllerTest {
 
     @Test
     public void whenProvidesAccessTokenWithInvalidAuthorityThenRejectTheRequest() {
         var username = "alice";
-        var accessToken = OidcWiremockTestResource.getAccessToken(username, Set.of("user"));
+        var accessToken = OidcWiremockTestResourceConfig.getAccessToken(username, Set.of("user"));
         given()
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .when()
-                .get("/api/group/{username}", "alice")
+                .get("/api/group/{groupId}", "not-exists")
                 .then()
-                .statusCode(401);
+                .statusCode(403);
+    }
+
+    @Test
+    public void whenProvidesAccessTokenWithValidAuthorityThenAcceptTheRequest() {
+        var username = "alice";
+        var accessToken = OidcWiremockTestResourceConfig.generateCustomJwtToken(username,
+                List.of("openid", "groups:read", "groups:write"));
+        given()
+                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .when()
+                .get("/api/group/{groupId}", "not-exists")
+                .then()
+                .statusCode(404);       // Group not found
     }
 }
