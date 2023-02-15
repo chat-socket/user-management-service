@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 import javax.ws.rs.NotFoundException;
 import java.util.HashSet;
 
@@ -31,6 +32,7 @@ public class ChatUserService {
         return chatUserRepository.count("userId", userId) > 0;
     }
 
+    @Transactional
     public ChatUser createUser(ChatUserDTO.Request.Create newUser,
                                UserLoginType userLoginType, boolean isActivated) {
         var chatUser = ChatUser.builder()

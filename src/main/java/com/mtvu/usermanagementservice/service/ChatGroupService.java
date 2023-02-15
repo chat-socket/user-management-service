@@ -2,11 +2,11 @@ package com.mtvu.usermanagementservice.service;
 
 import com.mtvu.usermanagementservice.model.ChatGroup;
 import com.mtvu.usermanagementservice.model.ChatJoinRecord;
-import com.mtvu.usermanagementservice.record.ChatGroupDTO;
 import com.mtvu.usermanagementservice.repository.ChatGroupRepository;
 import lombok.AllArgsConstructor;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.transaction.Transactional;
 import java.util.*;
 
 /**
@@ -23,28 +23,16 @@ public class ChatGroupService {
         return Optional.ofNullable(chatGroupRepository.findById(groupId));
     }
 
-    public String generateGroupId(List<String> participants) {
+    public String generateGroupId(Set<String> participants) {
         if (participants.size() == 2) {
-            Collections.sort(participants);
-            return "direct:" + String.join("--", participants);
+            return "direct:" + String.join("--", participants.stream().sorted().toList());
         }
         return "group:" + UUID.randomUUID();
     }
 
-    public ChatGroup addChatMembers(ChatGroup chatGroup, Set<ChatJoinRecord> chatJoinRecords) {
+    @Transactional
+    public ChatGroup createChatGroup(ChatGroup chatGroup, Set<ChatJoinRecord> chatJoinRecords) {
         chatGroup.getChatJoinRecords().addAll(chatJoinRecords);
-        chatGroupRepository.persist(chatGroup);
-        return chatGroup;
-    }
-
-    public ChatGroup createChatGroup(ChatGroupDTO.Request.Create data) {
-        var chatGroup = ChatGroup.builder()
-                .groupId(generateGroupId(data.participants().stream().toList()))
-                .groupAvatar("")
-                .groupDescription("")
-                .groupName("")
-                .chatJoinRecords(new HashSet<>())
-                .build();
         chatGroupRepository.persist(chatGroup);
         return chatGroup;
     }

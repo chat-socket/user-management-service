@@ -1,8 +1,6 @@
 package com.mtvu.usermanagementservice.api;
 
-import com.mtvu.usermanagementservice.model.ChatJoinRecord;
-import com.mtvu.usermanagementservice.model.ChatUserGroupKey;
-import com.mtvu.usermanagementservice.model.GroupRole;
+import com.mtvu.usermanagementservice.model.*;
 import com.mtvu.usermanagementservice.record.ChatGroupDTO;
 import com.mtvu.usermanagementservice.service.ChatGroupService;
 import com.mtvu.usermanagementservice.service.ChatUserService;
@@ -14,6 +12,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,17 +46,30 @@ public class GroupManagementController {
     @POST
     @Path("/create")
     @RolesAllowed("group:user:write")
-    public RestResponse<ChatGroupDTO.Response.Public> createGroup(
-            ChatGroupDTO.Request.Create data) {
-        var chatGroup = chatGroupService.createChatGroup(data);
-        Set<ChatJoinRecord> chatJoinRecords = new HashSet<>();
+    public RestResponse<ChatGroupDTO.Response.Public> createGroup(ChatGroupDTO.Request.Create data) {
+
         if (!data.participants().contains(principal.getName())) {
             // The current user is supposed to be inside the list of participants
             return RestResponse.status(Response.Status.BAD_REQUEST);
         }
+
+        var chatUsers = new ArrayList<ChatUser>();
         for (String participant : data.participants()) {
-            var role = participant.equals(principal.getName()) ? GroupRole.ADMIN : GroupRole.MEMBER;
             var chatUser = chatUserService.getUser(participant);
+            chatUsers.add(chatUser);
+        }
+
+        var chatGroup = ChatGroup.builder()
+                .groupId(chatGroupService.generateGroupId(data.participants()))
+                .groupAvatar("")
+                .groupDescription("")
+                .groupName("")
+                .chatJoinRecords(new HashSet<>())
+                .build();
+
+        Set<ChatJoinRecord> chatJoinRecords = new HashSet<>();
+        for (var chatUser : chatUsers) {
+            var role = chatUser.getUserId().equals(principal.getName()) ? GroupRole.ADMIN : GroupRole.MEMBER;
             chatJoinRecords.add(ChatJoinRecord.builder()
                     .id(new ChatUserGroupKey(chatGroup.getGroupId(), chatUser.getUserId()))
                     .chatGroup(chatGroup)
@@ -66,7 +78,7 @@ public class GroupManagementController {
                     .build()
             );
         }
-        chatGroupService.addChatMembers(chatGroup, chatJoinRecords);
+        chatGroupService.createChatGroup(chatGroup, chatJoinRecords);
         return RestResponse.ok(ChatGroupDTO.Response.Public.create(chatGroup));
     }
 }
