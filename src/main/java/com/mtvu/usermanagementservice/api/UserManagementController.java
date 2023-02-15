@@ -29,7 +29,7 @@ public class UserManagementController {
 
     @POST
     @Path("/create/{user_type}")
-    @RolesAllowed("user:create")
+    @RolesAllowed("profile:sys:create")
     public RestResponse<ChatUserDTO.Response.Public> register(ChatUserDTO.Request.Create userData,
                                                               @PathParam("user_type") UserLoginType userType) {
         if (chatUserService.exists(userData.userId())) {
@@ -42,7 +42,7 @@ public class UserManagementController {
 
     @GET
     @Path("/find")
-    @RolesAllowed("user:find")
+    @RolesAllowed("profile:sys:find")
     public RestResponse<ChatUserDTO.Response.Public> findUser(@HeaderParam("X-User-Credential") String credential) {
         String base64Credentials = credential.substring("Basic".length()).trim();
         byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
@@ -55,7 +55,7 @@ public class UserManagementController {
 
     @GET
     @Path("/get/{userId}")
-    @RolesAllowed("user:find")
+    @RolesAllowed("profile:sys:find")
     public RestResponse<ChatUserDTO.Response.Public> getUser(@PathParam("userId") String userId) {
         var user = chatUserService.getUser(userId);
         return RestResponse.ok(ChatUserDTO.Response.Public.create(user));
@@ -63,7 +63,7 @@ public class UserManagementController {
 
     @GET
     @Path("/current")
-    @RolesAllowed("profile:read")
+    @RolesAllowed("profile:user:read")
     public RestResponse<ChatUserDTO.Response.Public> findUser() {
         var user = chatUserService.getUser(principal.getName());
         return RestResponse.ok(ChatUserDTO.Response.Public.create(user));

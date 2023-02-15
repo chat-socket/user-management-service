@@ -36,7 +36,7 @@ public class GroupManagementController {
 
     @GET
     @Path("/{groupId}")
-    @RolesAllowed({"groups:read"})
+    @RolesAllowed("group:sys:read")
     public RestResponse<ChatGroupDTO.Response.Public> getGroup(@PathParam("groupId") String groupId) {
         var group = chatGroupService.getChatGroup(groupId);
         return group
@@ -46,7 +46,7 @@ public class GroupManagementController {
 
     @POST
     @Path("/create")
-    @RolesAllowed("group:write")
+    @RolesAllowed("group:user:write")
     public RestResponse<ChatGroupDTO.Response.Public> createGroup(
             ChatGroupDTO.Request.Create data) {
         var chatGroup = chatGroupService.createChatGroup(data);

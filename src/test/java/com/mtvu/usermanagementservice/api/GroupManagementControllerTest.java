@@ -33,7 +33,7 @@ class GroupManagementControllerTest {
     public void whenProvidesAccessTokenWithValidAuthorityThenAcceptTheRequest() {
         var username = "alice";
         var accessToken = OidcWiremockTestResourceConfig.generateCustomJwtToken(username,
-                List.of("openid", "groups:read", "group:write"));
+                List.of("openid", "group:sys:read"));
         given()
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
