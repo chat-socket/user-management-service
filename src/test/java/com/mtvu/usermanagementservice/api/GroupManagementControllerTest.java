@@ -33,13 +33,13 @@ class GroupManagementControllerTest {
     public void whenProvidesAccessTokenWithValidAuthorityThenAcceptTheRequest() {
         var username = "alice";
         var accessToken = OidcWiremockTestResourceConfig.generateCustomJwtToken(username,
-                List.of("openid", "groups:read", "groups:write"));
+                List.of("openid", "groups:read", "group:write"));
         given()
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .when()
                 .get("/api/group/{groupId}", "not-exists")
                 .then()
-                .statusCode(404);       // Group not found
+                .statusCode(404);       // Group not found, as we haven't created it yet!
     }
 }

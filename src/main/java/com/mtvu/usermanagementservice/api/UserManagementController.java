@@ -8,14 +8,19 @@ import org.jboss.resteasy.reactive.RestResponse;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
+import java.util.Base64;
 
 /**
  * @author mvu
  * @project chat-socket
  **/
 @AllArgsConstructor
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @Path("/api/user")
 public class UserManagementController {
     private ChatUserService chatUserService;
@@ -38,8 +43,12 @@ public class UserManagementController {
     @GET
     @Path("/find")
     @RolesAllowed("user:find")
-    public RestResponse<ChatUserDTO.Response.Public> findUser(@HeaderParam("FindUser") String username,
-                                                                @HeaderParam("FindPwd") String password) {
+    public RestResponse<ChatUserDTO.Response.Public> findUser(@HeaderParam("X-User-Credential") String credential) {
+        String base64Credentials = credential.substring("Basic".length()).trim();
+        byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+        String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+        String username = credentials.split(":")[0];
+        String password = credentials.split(":")[1];
         var user = chatUserService.findUser(username, password);
         return RestResponse.ok(ChatUserDTO.Response.Public.create(user));
     }
