@@ -2,11 +2,11 @@ package com.mtvu.usermanagementservice.api;
 
 import com.mtvu.usermanagementservice.model.UserLoginType;
 import com.mtvu.usermanagementservice.record.ChatUserDTO;
-import com.mtvu.usermanagementservice.security.PermissionsAllowed;
 import com.mtvu.usermanagementservice.service.ChatUserService;
 import lombok.AllArgsConstructor;
 import org.jboss.resteasy.reactive.RestResponse;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.security.Principal;
@@ -24,7 +24,7 @@ public class UserManagementController {
 
     @POST
     @Path("/create/{user_type}")
-    @PermissionsAllowed("user:create")
+    @RolesAllowed("user:create")
     public RestResponse<ChatUserDTO.Response.Public> register(ChatUserDTO.Request.Create userData,
                                                               @PathParam("user_type") UserLoginType userType) {
         if (chatUserService.exists(userData.userId())) {
@@ -37,7 +37,7 @@ public class UserManagementController {
 
     @GET
     @Path("/find")
-    @PermissionsAllowed("user:find")
+    @RolesAllowed("user:find")
     public RestResponse<ChatUserDTO.Response.Public> findUser(@HeaderParam("FindUser") String username,
                                                                 @HeaderParam("FindPwd") String password) {
         var user = chatUserService.findUser(username, password);
@@ -46,7 +46,7 @@ public class UserManagementController {
 
     @GET
     @Path("/get/{userId}")
-    @PermissionsAllowed("user:find")
+    @RolesAllowed("user:find")
     public RestResponse<ChatUserDTO.Response.Public> getUser(@PathParam("userId") String userId) {
         var user = chatUserService.getUser(userId);
         return RestResponse.ok(ChatUserDTO.Response.Public.create(user));
@@ -54,7 +54,7 @@ public class UserManagementController {
 
     @GET
     @Path("/current")
-    @PermissionsAllowed("profile:read")
+    @RolesAllowed("profile:read")
     public RestResponse<ChatUserDTO.Response.Public> findUser() {
         var user = chatUserService.getUser(principal.getName());
         return RestResponse.ok(ChatUserDTO.Response.Public.create(user));
@@ -62,7 +62,7 @@ public class UserManagementController {
 
     @PUT
     @Path("/password")
-    @PermissionsAllowed("profile:write")
+    @RolesAllowed("profile:write")
     public RestResponse<ChatUserDTO.Response.Public> changeUserPassword(ChatUserDTO.Request.Password password) {
         var user = chatUserService.getUser(principal.getName());
         user = chatUserService.updatePassword(user, password.newPassword());

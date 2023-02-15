@@ -4,13 +4,16 @@ import com.mtvu.usermanagementservice.model.ChatJoinRecord;
 import com.mtvu.usermanagementservice.model.ChatUserGroupKey;
 import com.mtvu.usermanagementservice.model.GroupRole;
 import com.mtvu.usermanagementservice.record.ChatGroupDTO;
-import com.mtvu.usermanagementservice.security.PermissionsAllowed;
 import com.mtvu.usermanagementservice.service.ChatGroupService;
 import com.mtvu.usermanagementservice.service.ChatUserService;
 import lombok.AllArgsConstructor;
 import org.jboss.resteasy.reactive.RestResponse;
 
-import javax.ws.rs.*;
+import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.security.Principal;
 import java.util.HashSet;
@@ -33,7 +36,7 @@ public class GroupManagementController {
 
     @GET
     @Path("/{groupId}")
-    @PermissionsAllowed("groups:read")
+    @RolesAllowed({"groups:read"})
     public RestResponse<ChatGroupDTO.Response.Public> getGroup(@PathParam("groupId") String groupId) {
         var group = chatGroupService.getChatGroup(groupId);
         return group
@@ -43,7 +46,7 @@ public class GroupManagementController {
 
     @POST
     @Path("/create")
-    @PermissionsAllowed("groups:write")
+    @RolesAllowed("group:write")
     public RestResponse<ChatGroupDTO.Response.Public> createGroup(
             ChatGroupDTO.Request.Create data) {
         var chatGroup = chatGroupService.createChatGroup(data);
