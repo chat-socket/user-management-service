@@ -44,7 +44,6 @@ public class GroupManagementController {
     }
 
     @POST
-    @Path("/create")
     @RolesAllowed("group:user:write")
     public RestResponse<ChatGroupDTO.Response.Public> createGroup(ChatGroupDTO.Request.Create data) {
 

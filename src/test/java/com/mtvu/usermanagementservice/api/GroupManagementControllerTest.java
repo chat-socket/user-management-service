@@ -1,5 +1,8 @@
 package com.mtvu.usermanagementservice.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mtvu.usermanagementservice.config.OidcWiremockTestResourceConfig;
 import com.mtvu.usermanagementservice.model.UserLoginType;
 import com.mtvu.usermanagementservice.record.ChatGroupDTO;
@@ -7,9 +10,8 @@ import com.mtvu.usermanagementservice.record.ChatUserDTO;
 import com.mtvu.usermanagementservice.service.ChatUserService;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import wiremock.com.fasterxml.jackson.core.JsonProcessingException;
-import wiremock.com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.HttpHeaders;
@@ -26,7 +28,9 @@ class GroupManagementControllerTest {
     @Inject
     ChatUserService chatUserService;
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final JsonMapper OBJ_MAPPER = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .build();
 
     @Test
     public void whenProvidesAccessTokenWithInvalidAuthorityThenRejectTheRequest() {
@@ -69,7 +73,7 @@ class GroupManagementControllerTest {
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .body(OBJECT_MAPPER.writeValueAsString(group))
+                .body(OBJ_MAPPER.writeValueAsString(group))
                 .when()
                 .post("/api/group/create")
                 .then()
@@ -87,17 +91,31 @@ class GroupManagementControllerTest {
 
 
         var accessToken = OidcWiremockTestResourceConfig.generateCustomJwtToken(username,
-                List.of("openid", "group:user:write"));
+                List.of("openid", "group:user:write", "group:sys:read"));
 
         var group = new ChatGroupDTO.Request.Create(Set.of(username, "bob"));
-        given()
+        var response = given()
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .body(OBJECT_MAPPER.writeValueAsString(group))
+                .body(OBJ_MAPPER.writeValueAsString(group))
                 .when()
-                .post("/api/group/create")
-                .then()
-                .statusCode(200);
+                .post("/api/group");
+
+        Assertions.assertEquals(200, response.getStatusCode());
+        var groupCreated = OBJ_MAPPER.readValue(response.getBody().asString(), ChatGroupDTO.Response.Public.class);
+
+        var getGroupRes = given()
+                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .when()
+                .get("/api/group/{groupId}", groupCreated.groupId());
+
+        Assertions.assertEquals(200, getGroupRes.getStatusCode());
+
+        var groupFetched = OBJ_MAPPER.readValue(getGroupRes.getBody().asString(), ChatGroupDTO.Response.Public.class);
+        Assertions.assertEquals(groupCreated.createdAt(), groupFetched.createdAt());
+
     }
 }
