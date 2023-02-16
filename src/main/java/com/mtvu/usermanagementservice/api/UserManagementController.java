@@ -28,10 +28,10 @@ public class UserManagementController {
     private Principal principal;
 
     @POST
-    @Path("/create/{user_type}")
+    @Path("/create/{userType}")
     @RolesAllowed("profile:sys:create")
     public RestResponse<ChatUserDTO.Response.Public> register(ChatUserDTO.Request.Create userData,
-                                                              @PathParam("user_type") UserLoginType userType) {
+                                                              @PathParam("userType") UserLoginType userType) {
         if (chatUserService.exists(userData.userId())) {
             return RestResponse.status(Response.Status.CONFLICT);
         }

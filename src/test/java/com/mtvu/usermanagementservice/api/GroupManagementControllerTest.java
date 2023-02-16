@@ -61,23 +61,23 @@ class GroupManagementControllerTest {
 
     @Test
     public void whenCreateGroupWithNonExistingUserThenRejectTheRequest() throws JsonProcessingException {
-        var username = "alice";
+        var username = "alex";
         var user = new ChatUserDTO.Request.Create(username, "Alice", "", "password", "");
         chatUserService.createUser(user, UserLoginType.EMAIL, true);
 
         var accessToken = OidcWiremockTestResourceConfig.generateCustomJwtToken(username,
                 List.of("openid", "group:user:write"));
 
-        var group = new ChatGroupDTO.Request.Create(Set.of(username, "bob"));
+        var group = new ChatGroupDTO.Request.Create(Set.of(username, "katie"));
         given()
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .body(OBJ_MAPPER.writeValueAsString(group))
                 .when()
-                .post("/api/group/create")
+                .post("/api/group")
                 .then()
-                .statusCode(404);       // User bob not found
+                .statusCode(404);       // User katie not found
     }
 
     @Test
