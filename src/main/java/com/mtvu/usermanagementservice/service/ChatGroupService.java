@@ -23,16 +23,18 @@ public class ChatGroupService {
         return Optional.ofNullable(chatGroupRepository.findById(groupId));
     }
 
-    public String generateGroupId(Set<String> participants) {
-        if (participants.size() == 2) {
-            return "direct:" + String.join("--", participants.stream().sorted().toList());
+    private String generateGroupId(ChatGroup chatGroup) {
+        if (chatGroup.getChatJoinRecords().size() == 2) {
+            // For direct messaging
+            var participants = chatGroup.getChatJoinRecords().stream().map(x -> x.getChatUser().getUserId()).toList();
+            return "direct:" + String.join("|", participants.stream().sorted().toList());
         }
         return "group:" + UUID.randomUUID();
     }
 
     @Transactional
-    public ChatGroup createChatGroup(ChatGroup chatGroup, Set<ChatJoinRecord> chatJoinRecords) {
-        chatGroup.getChatJoinRecords().addAll(chatJoinRecords);
+    public ChatGroup createChatGroup(ChatGroup chatGroup) {
+        chatGroup.setGroupId(generateGroupId(chatGroup));
         chatGroupRepository.persist(chatGroup);
         return chatGroup;
     }

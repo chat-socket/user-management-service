@@ -59,7 +59,6 @@ public class GroupManagementController {
         }
 
         var chatGroup = ChatGroup.builder()
-                .groupId(chatGroupService.generateGroupId(data.participants()))
                 .groupAvatar("")
                 .groupDescription("")
                 .groupName("")
@@ -77,7 +76,8 @@ public class GroupManagementController {
                     .build()
             );
         }
-        chatGroupService.createChatGroup(chatGroup, chatJoinRecords);
+        chatGroup.getChatJoinRecords().addAll(chatJoinRecords);
+        chatGroupService.createChatGroup(chatGroup);
         return RestResponse.ok(ChatGroupDTO.Response.Public.create(chatGroup));
     }
 }
