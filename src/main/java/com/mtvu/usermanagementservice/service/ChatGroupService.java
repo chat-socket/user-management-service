@@ -1,7 +1,6 @@
 package com.mtvu.usermanagementservice.service;
 
 import com.mtvu.usermanagementservice.model.ChatGroup;
-import com.mtvu.usermanagementservice.model.ChatJoinRecord;
 import com.mtvu.usermanagementservice.repository.ChatGroupRepository;
 import lombok.AllArgsConstructor;
 

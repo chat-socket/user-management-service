@@ -116,6 +116,8 @@ class GroupManagementControllerTest {
 
         var groupFetched = OBJ_MAPPER.readValue(getGroupRes.getBody().asString(), ChatGroupDTO.Response.Public.class);
         Assertions.assertEquals(groupCreated.createdAt(), groupFetched.createdAt());
+        Assertions.assertTrue(groupFetched.participants().contains(username));
+        Assertions.assertTrue(groupFetched.participants().contains("bob"));
 
     }
 }

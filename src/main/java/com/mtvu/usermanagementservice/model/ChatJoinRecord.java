@@ -14,13 +14,11 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder(toBuilder = true)
 @Table(name = "chat_join_record")
 public class ChatJoinRecord {
 
     @EmbeddedId
-    private ChatUserGroupKey id;
+    private ChatUserGroupKey userGroupKey;
 
     @ManyToOne
     @MapsId("groupId")
@@ -39,4 +37,11 @@ public class ChatJoinRecord {
     @Column(name = "role_id", nullable = false, updatable = false, length = 100)
     @Enumerated(EnumType.STRING)
     private GroupRole role;
+
+    public ChatJoinRecord(ChatGroup chatGroup, ChatUser chatUser, GroupRole role) {
+        this.chatGroup = chatGroup;
+        this.chatUser = chatUser;
+        this.userGroupKey = new ChatUserGroupKey(chatGroup.getGroupId(), chatUser.getUserId());
+        this.role = role;
+    }
 }

@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -33,6 +34,12 @@ public class GroupManagementController {
 
     private Principal principal;
 
+    /**
+     * Get the details of a specific group by id
+     * To protect the privacy of our user, this API is only accessible by system entities (group:sys:read)
+     * @param groupId ID of the group
+     * @return
+     */
     @GET
     @Path("/{groupId}")
     @RolesAllowed("group:sys:read")
@@ -41,6 +48,17 @@ public class GroupManagementController {
         return group
             .map((x) -> RestResponse.ok(ChatGroupDTO.Response.Public.create(x)))
             .orElseGet(RestResponse::notFound);
+    }
+
+    /**
+     * Get the list of the groups that the current user is participated.
+     */
+    @GET
+    @RolesAllowed("group:user:read")
+    public RestResponse<List<ChatGroupDTO.Response.Public>> getGroups() {
+        var chatUser = chatUserService.getUser(principal.getName());
+        var groups = chatUser.getChatJoinRecords().stream().map(ChatJoinRecord::getChatGroup).toList();
+        return RestResponse.ok(groups.stream().map(ChatGroupDTO.Response.Public::create).toList());
     }
 
     @POST
@@ -58,25 +76,12 @@ public class GroupManagementController {
             chatUsers.add(chatUser);
         }
 
-        var chatGroup = ChatGroup.builder()
-                .groupAvatar("")
-                .groupDescription("")
-                .groupName("")
-                .chatJoinRecords(new HashSet<>())
-                .build();
-
-        Set<ChatJoinRecord> chatJoinRecords = new HashSet<>();
+        var chatGroup = new ChatGroup();
         for (var chatUser : chatUsers) {
             var role = chatUser.getUserId().equals(principal.getName()) ? GroupRole.ADMIN : GroupRole.MEMBER;
-            chatJoinRecords.add(ChatJoinRecord.builder()
-                    .id(new ChatUserGroupKey(chatGroup.getGroupId(), chatUser.getUserId()))
-                    .chatGroup(chatGroup)
-                    .chatUser(chatUser)
-                    .role(role)
-                    .build()
-            );
+            chatGroup.addMember(chatUser, role);
         }
-        chatGroup.getChatJoinRecords().addAll(chatJoinRecords);
+
         chatGroupService.createChatGroup(chatGroup);
         return RestResponse.ok(ChatGroupDTO.Response.Public.create(chatGroup));
     }
