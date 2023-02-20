@@ -37,8 +37,7 @@ public class ChatGroup {
     private Set<ChatJoinRecord> chatJoinRecords = new HashSet<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    @CreationTimestamp
-    private OffsetDateTime createdAt;
+    private OffsetDateTime createdAt = OffsetDateTime.now();
 
     public void addMember(ChatUser chatUser, GroupRole role) {
         var chatJoinRecord = new ChatJoinRecord(this, chatUser, role);

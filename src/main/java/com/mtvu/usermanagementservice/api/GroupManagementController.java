@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import javax.annotation.security.RolesAllowed;
+import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -63,6 +64,7 @@ public class GroupManagementController {
 
     @POST
     @RolesAllowed("group:user:write")
+    @Transactional
     public RestResponse<ChatGroupDTO.Response.Public> createGroup(ChatGroupDTO.Request.Create data) {
 
         if (!data.participants().contains(principal.getName())) {

@@ -5,8 +5,8 @@ import com.mtvu.usermanagementservice.repository.ChatGroupRepository;
 import lombok.AllArgsConstructor;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.transaction.Transactional;
-import java.util.*;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * @author mvu
@@ -31,7 +31,6 @@ public class ChatGroupService {
         return "group:" + UUID.randomUUID();
     }
 
-    @Transactional
     public ChatGroup createChatGroup(ChatGroup chatGroup) {
         chatGroup.setGroupId(generateGroupId(chatGroup));
         chatGroupRepository.persist(chatGroup);
