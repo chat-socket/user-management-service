@@ -22,4 +22,4 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 /bin/bash gradlew build -Dquarkus.package.type=native
 
-docker build -f src/main/docker/Dockerfile.native-micro -t "chatsocket/user-management-service:${VERSION}" .
+docker build -f src/main/docker/Dockerfile.native-micro -t "chatsocket/user-management-service:${VERSION}" "${POSITIONAL[@]}" .
