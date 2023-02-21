@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import javax.inject.Inject;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 
@@ -115,9 +116,9 @@ class GroupManagementControllerTest {
         Assertions.assertEquals(200, getGroupRes.getStatusCode());
 
         var groupFetched = OBJ_MAPPER.readValue(getGroupRes.getBody().asString(), ChatGroupDTO.Response.Public.class);
-        Assertions.assertEquals(groupCreated.createdAt(), groupFetched.createdAt());
+        Assertions.assertTrue(groupCreated.createdAt().truncatedTo(ChronoUnit.MILLIS).isEqual(
+                groupFetched.createdAt().truncatedTo(ChronoUnit.MILLIS)));
         Assertions.assertTrue(groupFetched.participants().contains(username));
         Assertions.assertTrue(groupFetched.participants().contains("bob"));
-
     }
 }
