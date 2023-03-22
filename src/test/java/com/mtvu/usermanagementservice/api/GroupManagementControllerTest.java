@@ -34,6 +34,16 @@ class GroupManagementControllerTest {
             .build();
 
     @Test
+    public void whenNotProvidesAccessTokenThenRejectTheRequest() {
+        given()
+                .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
+                .when()
+                .get("/api/group/{groupId}", "not-exists")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
     public void whenProvidesAccessTokenWithInvalidAuthorityThenRejectTheRequest() {
         var username = "alice";
         var accessToken = OidcWiremockTestResourceConfig.getAccessToken(username, Set.of("user"));
